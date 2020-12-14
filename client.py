@@ -6,7 +6,7 @@ if nickname == 'admin':
     password = input("Enter password for admin: ")
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(('127.0.0.1', 65535))
+client.connect(('127.0.0.1', 78875))
 
 stop_thread = False
 
@@ -24,6 +24,11 @@ def receive():
                     client.send(password.encode('ascii'))
                     if client.recv(1024).decode('ascii') == 'Refuse access':
                         print("Connection was denied")
+                        stop_thread = True
+
+                    elif next_message == 'Ban':
+                        print('Connection refused because user is banned')
+                        client.close()
                         stop_thread = True
 
             else:
@@ -55,3 +60,4 @@ receive_thread.start()
 
 write_thread = threading.Thread(target=write)
 write_thread.start()
+
