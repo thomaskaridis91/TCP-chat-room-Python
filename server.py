@@ -1,34 +1,35 @@
-import threading
 import socket
+import threading                                                #Libraries import
 
-host = '127.0.0.1' #local host otherwise use server IP#
-port = 78875
+host = '127.0.0.1'                                                      #LocalHost
+port = 7976                                                             #Choosing unreserved port
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((host,port))
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)              #socket initialization
+server.bind((host, port))                                               #binding host and port to socket
 server.listen()
 
 clients = []
 nicknames = []
 
-def broadcast(message):
+
+def broadcast(message):           #broadcast function declaration
     for client in clients:
         client.send(message)
 
 def handle(client):
     while True:
-        try:
-            msg = message = client.recv(1024)
-            if msg.decode('ascii').startswitch('Kick'):
+        try:                    ###receiving valid messages from clients   or baning them or kicking them ##
+            message = client.recv(1024)
+            if message.decode('ascii').startswith('Kick'):
                 if nicknames[clients.index(client)] == 'admin':
-                    name_to_kick = msg.decode('ascii')[5:]
+                    name_to_kick = message.decode('ascii')[5:]
                     kick_user(name_to_kick)
                 else:
                     client.send('Command refused'.encode('ascii'))
 
-            elif msg.decode('ascii').startswitch('Ban'):
+            elif message.decode('ascii').startswith('Ban'):
                 if nicknames[clients.index(client)] == 'admin':
-                    name_to_ban = msg.decode('ascii')[4:]
+                    name_to_ban = message.decode('ascii')[4:]
                     kick_user(name_to_ban)
                     with open('banlist.txt', 'a') as f:
                         f.write(f'{name_to_ban}\n')
@@ -46,7 +47,7 @@ def handle(client):
             nicknames.remove(nickname)
             break
 
-def receive():
+def receive():              ###accepting multiple clients or kick or ban
     while True:
         client, adress = server.accept()
         print(f"Connected with {str(adress)}")
@@ -64,7 +65,7 @@ def receive():
 
               #admin#
         if nickname == 'admin':
-            client.send('Password'.encode('ascii'))
+            client.send('password'.encode('ascii'))
             password = client.recv(1024).decode('ascii')
 
             if password != 'adminpass':
@@ -75,9 +76,9 @@ def receive():
         nicknames.append(nickname)
         clients.append(client)
 
-        print(f'Nickname of the client is {nickname}')
-        broadcast(f'{nickname} joined the chat'.encode(ascii))
-        client.send('Connected to the server'.encode(ascii))
+        print("Nickname of the client is {}".format(nickname))
+        broadcast("{} joined the chat".format(nickname).encode('ascii'))
+        client.send('Connected to server!'.encode('ascii'))
 
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
